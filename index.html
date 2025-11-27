@@ -28,7 +28,7 @@
         display: block;
         margin-top: 6px;
     }
-    input[type="number"] {
+    input[type="number"], input[readonly] {
         width: 100%;
         padding: 10px;
         margin: 6px 0 12px 0;
@@ -38,6 +38,9 @@
         color: #e6edf3;
         font-size: 16px;
         box-sizing: border-box;
+    }
+    input[readonly] {
+        opacity: 0.6;
     }
     .checkbox-row {
         display: flex;
@@ -90,20 +93,20 @@
     <input type="number" id="systemSize" placeholder="e.g. 5.67" step="0.01">
 
     <label>Price Per Watt (PPW)</label>
-    <input type="number" id="ppw" placeholder="e.g. 3.2" step="0.01">
+    <input type="number" id="ppw" placeholder="e.g. 3.8" step="0.01">
 
     <label>Redline ($/W)</label>
-    <input type="number" id="redline" placeholder="e.g. 2.9" step="0.01">
+    <!-- Locked redline at 3.2 -->
+    <input type="number" id="redline" value="3.2" readonly>
 
     <label>Your Split (0.5 = 50%)</label>
     <input type="number" id="split" placeholder="e.g. 0.5" step="0.01">
 
     <div class="checkbox-row">
         <input type="checkbox" id="iqPanel">
-        <span>System contains an IQ panel (+$500 to you & closer)</span>
+        <span>System contains an IQ panel (+$500 each)</span>
     </div>
 
-    <!-- Inline onclick to keep it super-compatible -->
     <button onclick="calculate()">Calculate</button>
 
     <div class="results" id="results" style="display:none;">
@@ -121,12 +124,12 @@
 function calculate() {
     var size = parseFloat(document.getElementById("systemSize").value);
     var ppw = parseFloat(document.getElementById("ppw").value);
-    var redline = parseFloat(document.getElementById("redline").value);
+    var redline = 3.2; // permanently locked
     var split = parseFloat(document.getElementById("split").value);
     var iqPanel = document.getElementById("iqPanel").checked;
 
-    if (isNaN(size) || isNaN(ppw) || isNaN(redline) || isNaN(split)) {
-        alert("Please fill in all four fields (use dots for decimals, e.g., 3.2).");
+    if (isNaN(size) || isNaN(ppw) || isNaN(split)) {
+        alert("Please fill in system size, PPW, and split (use decimals like 3.8).");
         return;
     }
 
@@ -134,7 +137,6 @@ function calculate() {
     var redlineCost = size * 1000 * redline;
     var margin = totalPrice - redlineCost;
 
-    // Base commissions
     var myCommission = margin * split;
     var closerCommission = margin * (1 - split);
 
@@ -147,11 +149,11 @@ function calculate() {
         noteMessages.push("Minimum commission size is $500 for both closer and setter.");
     }
 
-    // IQ panel bump
+    // IQ panel bonus
     if (iqPanel) {
         myCommission += 500;
         closerCommission += 500;
-        noteMessages.push("IQ panel bonus applied: +$500 to both closer and setter.");
+        noteMessages.push("IQ panel bonus applied: +$500 each.");
     }
 
     document.getElementById("totalPrice").innerText =
